@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Products Showcase - Firebase Realtime</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'Georgia', 'serif'],
+                        brand: ['Cinzel', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #f4f5f7 0%, #e1e4e8 100%);
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+        .serif-title { font-family: 'Playfair Display', serif; }
+        .carousel-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+        .carousel-item {
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), 
+                        filter 0.7s cubic-bezier(0.16, 1, 0.3, 1), 
+                        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, filter, opacity;
+            position: absolute;
+        }
+        .text-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            will-change: opacity, transform;
+        }
+        .text-out { opacity: 0; transform: translateY(8px); }
+        .text-in { opacity: 1; transform: translateY(0); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 999px; }
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #000;
+            width: 36px;
+            height: 36px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-slate-300 relative">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="w-full px-4 py-5 sm:px-6 md:px-12 flex items-center justify-between z-30">
+        <div class="flex items-center gap-3 cursor-pointer group" onclick="resetCatalog()">
+            <img src="logo.png" alt="AKK Trading Logo" class="h-8 sm:h-10 object-contain" onerror="this.onerror=null; this.outerHTML='<span class=\'text-lg font-bold font-brand tracking-widest text-black\'>AKK TRADING</span>';">
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4">
+            <div class="relative flex items-center">
+                <input 
+                    type="text" 
+                    id="searchInput"
+                    oninput="handleSearch(this.value)"
+                    placeholder="Search..." 
+                    class="w-32 sm:w-44 md:w-56 px-3.5 py-1.5 text-xs sm:text-sm bg-transparent border border-gray-400 rounded-full focus:outline-none focus:border-black transition-all duration-300 placeholder-gray-500 text-gray-800"
+                >
+                <i class="fa-solid fa-magnifying-glass absolute right-3 text-gray-500 text-xs pointer-events-none"></i>
+                <div id="searchResults" class="hidden absolute top-full right-0 sm:right-0 mt-2 z-50 bg-white/95 backdrop-blur-md border border-gray-200/80 rounded-2xl p-2 shadow-xl w-64 sm:w-72 md:w-80 max-h-64 overflow-y-auto"></div>
+            </div>
+
+            <a 
+                href="tel:09123456789" 
+                class="px-3.5 sm:px-6 py-1.5 text-xs sm:text-sm border border-gray-400 rounded-full hover:bg-black hover:text-white transition-all duration-300 font-medium active:scale-95 inline-flex items-center justify-center text-gray-900"
+            >
+                Contact
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN CAROUSEL SHOWCASE AREA -->
+    <main class="flex-1 flex flex-col justify-center items-center relative my-1 md:my-0 px-2 sm:px-4 overflow-hidden w-full">
+        
+        <div id="loadingIndicator" class="flex flex-col items-center justify-center py-12 space-y-3">
+            <div class="spinner"></div>
+            <p class="text-xs font-semibold text-gray-500 tracking-wider">ဒေတာများ ဆွဲယူနေပါသည်...</p>
+        </div>
+
+        <div class="w-full max-w-6xl mx-auto flex items-center justify-center relative min-h-[320px] sm:min-h-[380px] md:min-h-[440px]">
+            <div id="carouselTrack" class="carousel-track relative w-full h-full flex items-center justify-center">
+                <!-- Dynamic cards rendered from Firebase -->
+            </div>
+        </div>
+
+        <div class="md:hidden mt-2 z-20">
+            <button 
+                onclick="openDetailsModal()" 
+                class="px-5 py-2 bg-gray-200/80 backdrop-blur border border-gray-300 rounded-full text-xs font-serif text-gray-800 shadow-sm active:scale-95 transition-all flex items-center gap-2"
+            >
+                <span>Tap to view details</span>
+                <i class="fa-solid fa-chevron-right text-[9px] text-gray-500"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- FOOTER SECTION (Fixed Grid Layout for True Centering) -->
+    <footer class="w-full px-6 py-5 md:px-16 grid grid-cols-1 md:grid-cols-3 items-center z-30 gap-4 md:gap-0">
+        
+        <!-- Left: Desktop Product Meta Details -->
+        <div id="desktopDetailsContainer" class="text-transition text-in hidden md:block space-y-1 text-sm font-sans text-gray-800 leading-relaxed">
+            <p><span class="font-medium">Brand :</span> <span id="d-brand" class="font-serif">-</span></p>
+            <p><span class="font-medium">Price :</span> <span id="d-price" class="font-serif">-</span></p>
+            <p><span class="font-medium">Unit :</span> <span id="d-unit" class="font-serif">-</span></p>
+            <p><span class="font-medium">Stocks :</span> <span id="d-stocks" class="font-serif">-</span></p>
+        </div>
+
+        <!-- Center: Title Container & Mobile Nav Buttons -->
+        <div class="flex items-center justify-between md:justify-center w-full">
+            <!-- Mobile-only Left Nav Arrow -->
+            <button onclick="prevSlide()" aria-label="Previous Product" class="md:hidden w-11 h-11 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+
+            <!-- Title Container (အလယ်တည့်တည့်တွင် သီးသန့်ကျစေရန်) -->
+            <div id="titleContainer" class="text-transition text-in text-center mx-auto">
+                <h1 id="productTitleCode" class="serif-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-wide text-gray-900 select-none">
+                    -
+                </h1>
+            </div>
+
+            <!-- Mobile-only Right Nav Arrow -->
+            <button onclick="nextSlide()" aria-label="Next Product" class="md:hidden w-11 h-11 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Right: Desktop Nav Arrow Controls -->
+        <div class="hidden md:flex items-center justify-end gap-3">
+            <button onclick="prevSlide()" aria-label="Previous Product" class="w-12 h-12 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm">
+                <i class="fa-solid fa-chevron-left text-base"></i>
+            </button>
+            <button onclick="nextSlide()" aria-label="Next Product" class="w-12 h-12 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm">
+                <i class="fa-solid fa-chevron-right text-base"></i>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- PRODUCT DETAILS SPECIFICATIONS MODAL -->
+    <div id="detailsModal" onclick="handleModalBackdropClick(event)" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all duration-300">
+        <div id="detailsModalCard" class="bg-white/95 backdrop-blur-md rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-white/60 transform scale-95 opacity-0 transition-all duration-300 relative">
+            <button onclick="closeDetailsModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-black transition">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">
+                <span id="modal-brand-tag" class="px-2.5 py-0.5 bg-gray-200 rounded-full text-gray-800">-</span>
+                <span>Specifications</span>
+            </div>
+
+            <h3 id="modal-title" class="serif-title text-3xl font-normal text-gray-900 mt-1">-</h3>
+            <p id="modal-subtitle" class="text-xs text-gray-500 font-sans tracking-wider mb-6">uniLac GLOSS ENAMEL</p>
+
+            <div class="space-y-3 text-sm text-gray-800 border-t border-b border-gray-100 py-4 mb-6">
+                <div class="flex justify-between items-center"><span class="text-gray-500">Brand</span><span id="modal-brand" class="font-medium">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-gray-500">Price</span><span id="modal-price" class="font-serif font-bold text-black text-base">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-gray-500">Unit</span><span id="modal-unit" class="font-medium">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-gray-500">Stock Status</span><span id="modal-stocks" class="font-medium text-emerald-600">-</span></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="tel:09123456789" class="flex-1 py-3 bg-black text-white rounded-2xl text-xs md:text-sm font-medium text-center hover:bg-gray-800 transition active:scale-95 shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-phone text-xs"></i>
+                    <span>Contact / Call Now</span>
+                </a>
+                <button onclick="closeDetailsModal()" class="px-5 py-3 border border-gray-300 rounded-2xl text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-100 transition active:scale-95">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & CAROUSEL LOGIC SCRIPT -->
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyAW5BNlFf0SBhC1vP8PfMOjItPRtzjLKdU",
+  authDomain: "akk-store-9.firebaseapp.com",
+  projectId: "akk-store-9",
+  storageBucket: "akk-store-9.firebasestorage.app",
+  messagingSenderId: "906521838751",
+  appId: "1:906521838751:web:3d4648a4749de6e06c0eaa",
+  measurementId: "G-5YHS8SZG9N"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let products = [];
+        let currentIndex = 0;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchClientProductsRealtime();
+            setupTouchEvents();
+        });
+
+        function fetchClientProductsRealtime() {
+            const loader = document.getElementById('loadingIndicator');
+
+            db.collection("products").onSnapshot((snapshot) => {
+                products = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    products.push({
+                        id: doc.id,
+                        code: data.code || 'UNKNOWN',
+                        brand: data.brand || 'AKK',
+                        subTitle: data.unit ? `${data.unit} PACK` : 'PAINT PRODUCT',
+                        price: data.price ? `${data.price.toLocaleString()} MMK` : '0 MMK',
+                        unit: data.unit || '1 gallon',
+                        stocks: data.stock !== undefined ? `${data.stock} available` : 'Available',
+                        image: data.image || '', 
+                        primaryColor: '#1e3a8a', 
+                        textColor: '#ffffff',
+                        keywords: `${data.code} ${data.brand}`.toLowerCase()
+                    });
+                });
+
+                loader.style.display = 'none';
+
+                if (products.length === 0) {
+                    document.getElementById('carouselTrack').innerHTML = `<p class="text-center text-gray-400 py-12 col-span-full">ပြသရန် ဆေးပစ္စည်းများ မရှိသေးပါ။</p>`;
+                    return;
+                }
+
+                if (currentIndex >= products.length) {
+                    currentIndex = 0;
+                }
+
+                initDOMCards();
+                updateCarouselPositions();
+                updateProductTextWithAnimation(true);
+            }, (error) => {
+                console.error("Error fetching live products: ", error);
+                loader.innerHTML = `<p class="text-red-500 text-xs">ဒေတာချိတ်ဆက်မှု အမှားအယွင်းရှိနေပါသည်။</p>`;
+            });
+        }
+
+        function initDOMCards() {
+            const track = document.getElementById('carouselTrack');
+            track.innerHTML = products.map((product, idx) => `
+                <div 
+                    id="card-item-${idx}"
+                    onclick="handleItemClick(${idx})"
+                    class="carousel-item cursor-pointer select-none flex flex-col items-center justify-center w-48 h-60 sm:w-64 sm:h-72 md:w-80 md:h-96"
+                >
+                    ${generatePaintCardContent(product)}
+                </div>
+            `).join('');
+        }
+
+        function generatePaintCardContent(product) {
+            if (product.image) {
+                return `
+                    <div class="w-full h-full flex items-center justify-center p-2">
+                        <img src="${product.image}" alt="${product.code}" class="max-w-full max-h-full object-contain pointer-events-none select-none drop-shadow-2xl">
+                    </div>
+                `;
+            } else {
+                return generatePaintBucketSVG(product);
+            }
+        }
+
+        function generatePaintBucketSVG(product) {
+            return `
+            <svg viewBox="0 0 300 360" width="100%" height="100%" class="drop-shadow-2xl transition-all duration-300 pointer-events-none select-none">
+                <defs>
+                    <linearGradient id="metalGrad_${product.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#888888" /><stop offset="50%" stop-color="#cccccc" /><stop offset="100%" stop-color="#333333" />
+                    </linearGradient>
+                    <filter id="shadow_${product.id}" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="25" stdDeviation="15" flood-color="#000" flood-opacity="0.35"/>
+                    </filter>
+                </defs>
+                <g filter="url(#shadow_${product.id})">
+                    <ellipse cx="150" cy="315" rx="90" ry="15" fill="url(#metalGrad_${product.id})" />
+                    <path d="M 60,85 L 60,315 A 90 15 0 0 0 240,315 L 240,85 Z" fill="#1e3a8a" />
+                    <ellipse cx="150" cy="85" rx="92" ry="16" fill="url(#metalGrad_${product.id})" />
+                    <g transform="translate(150, 160)">
+                        <text x="0" y="6" font-family="'Inter', sans-serif" font-weight="900" font-size="20" fill="#ffffff" text-anchor="middle" letter-spacing="1">
+                            ${product.brand}
+                        </text>
+                    </g>
+                    <text x="150" y="210" font-family="'Cinzel', serif" font-weight="700" font-size="16" fill="#ffffff" text-anchor="middle">
+                        PAINT
+                    </text>
+                    <rect x="175" y="240" width="40" height="15" rx="3" fill="#ffffff" />
+                    <text x="195" y="251" font-family="'Inter', sans-serif" font-weight="700" font-size="8" fill="#000000" text-anchor="middle">
+                        ${product.code}
+                    </text>
+                </g>
+            </svg>
+            `;
+        }
+
+        function updateCarouselPositions() {
+            const isMobile = window.innerWidth < 640;
+            const spacing = isMobile ? 115 : 270;
+            
+            products.forEach((_, idx) => {
+                const card = document.getElementById(`card-item-${idx}`);
+                if (!card) return;
+
+                let offset = idx - currentIndex;
+                const half = Math.floor(products.length / 2);
+                if (offset > half) offset -= products.length;
+                if (offset < -half) offset += products.length;
+
+                let xTranslate = offset * spacing;
+                let opacity = 1;
+                let scale = 1;
+                let blur = 0;
+                let zIndex = 30 - Math.abs(offset) * 10;
+                let rotateY = offset * (isMobile ? -8 : -15);
+
+                if (offset === 0) {
+                    scale = 1; blur = 0; opacity = 1; rotateY = 0;
+                } else if (Math.abs(offset) === 1) {
+                    scale = isMobile ? 0.65 : 0.75; blur = 4; opacity = 0.7;
+                } else {
+                    scale = 0.45; blur = 10; opacity = 0;
+                }
+
+                card.style.transform = `translateX(${xTranslate}px) scale(${scale}) rotateY(${rotateY}deg)`;
+                card.style.filter = `blur(${blur}px)`;
+                card.style.opacity = opacity;
+                card.style.zIndex = zIndex;
+            });
+        }
+
+        function updateProductTextWithAnimation(isInitial = false) {
+            if (products.length === 0) return;
+            const titleContainer = document.getElementById('titleContainer');
+            const detailsContainer = document.getElementById('desktopDetailsContainer');
+            const current = products[currentIndex];
+
+            if (isInitial) {
+                document.getElementById('productTitleCode').innerText = current.code;
+                document.getElementById('d-brand').innerText = current.brand;
+                document.getElementById('d-price').innerText = current.price;
+                document.getElementById('d-unit').innerText = current.unit;
+                document.getElementById('d-stocks').innerText = current.stocks;
+                return;
+            }
+
+            titleContainer.classList.remove('text-in'); titleContainer.classList.add('text-out');
+            detailsContainer.classList.remove('text-in'); detailsContainer.classList.add('text-out');
+
+            setTimeout(() => {
+                document.getElementById('productTitleCode').innerText = current.code;
+                document.getElementById('d-brand').innerText = current.brand;
+                document.getElementById('d-price').innerText = current.price;
+                document.getElementById('d-unit').innerText = current.unit;
+                document.getElementById('d-stocks').innerText = current.stocks;
+
+                titleContainer.classList.remove('text-out'); titleContainer.classList.add('text-in');
+                detailsContainer.classList.remove('text-out'); detailsContainer.classList.add('text-in');
+            }, 200);
+        }
+
+        function handleItemClick(idx) {
+            if (idx === currentIndex) {
+                openDetailsModal();
+            } else {
+                currentIndex = idx;
+                updateCarouselPositions();
+                updateProductTextWithAnimation();
+            }
+        }
+
+        function nextSlide() {
+            if (products.length === 0) return;
+            currentIndex = (currentIndex + 1) % products.length;
+            updateCarouselPositions();
+            updateProductTextWithAnimation();
+        }
+
+        function prevSlide() {
+            if (products.length === 0) return;
+            currentIndex = (currentIndex - 1 + products.length) % products.length;
+            updateCarouselPositions();
+            updateProductTextWithAnimation();
+        }
+
+        function openDetailsModal() {
+            if (products.length === 0) return;
+            const current = products[currentIndex];
+            
+            document.getElementById('modal-title').innerText = current.code;
+            document.getElementById('modal-subtitle').innerText = current.subTitle;
+            document.getElementById('modal-brand-tag').innerText = current.brand;
+            document.getElementById('modal-brand').innerText = current.brand;
+            document.getElementById('modal-price').innerText = current.price;
+            document.getElementById('modal-unit').innerText = current.unit;
+            document.getElementById('modal-stocks').innerText = current.stocks;
+
+            const backdrop = document.getElementById('detailsModal');
+            const card = document.getElementById('detailsModalCard');
+            
+            backdrop.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeDetailsModal() {
+            const backdrop = document.getElementById('detailsModal');
+            const card = document.getElementById('detailsModalCard');
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { backdrop.classList.add('hidden'); }, 250);
+        }
+
+        function handleModalBackdropClick(e) {
+            if (e.target.id === 'detailsModal') closeDetailsModal();
+        }
+
+        function handleSearch(query) {
+            const resultsContainer = document.getElementById('searchResults');
+            const rawQuery = query.trim().toLowerCase();
+
+            if (!rawQuery) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            const matches = products.filter(p => {
+                const searchStr = `${p.code} ${p.brand} ${p.keywords || ''}`.toLowerCase();
+                return searchStr.includes(rawQuery);
+            });
+
+            if (matches.length > 0) {
+                resultsContainer.innerHTML = matches.map(p => `
+                    <div onclick="selectProduct('${p.id}')" class="p-2 sm:p-2.5 hover:bg-gray-100 rounded-xl cursor-pointer flex items-center justify-between transition">
+                        <div>
+                            <p class="font-serif font-bold text-xs sm:text-sm text-gray-900">${p.code} - ${p.brand}</p>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-semibold text-gray-700 ml-2">${p.price}</span>
+                    </div>
+                `).join('');
+                resultsContainer.classList.remove('hidden');
+            } else {
+                resultsContainer.innerHTML = `<div class="p-3 text-xs text-gray-500 text-center">No matching paint products</div>`;
+                resultsContainer.classList.remove('hidden');
+            }
+        }
+
+        function selectProduct(id) {
+            const targetIdx = products.findIndex(p => p.id === id);
+            if (targetIdx !== -1) {
+                currentIndex = targetIdx;
+                updateCarouselPositions();
+                updateProductTextWithAnimation();
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchResults').classList.add('hidden');
+            }
+        }
+
+        function resetCatalog() {
+            currentIndex = 0;
+            updateCarouselPositions();
+            updateProductTextWithAnimation();
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        function setupTouchEvents() {
+            const touchArea = document.getElementById('carouselTrack');
+            let startX = 0;
+            let endX = 0;
+
+            touchArea.addEventListener('touchstart', (e) => { startX = e.changedTouches[0].screenX; }, { passive: true });
+            touchArea.addEventListener('touchend', (e) => { endX = e.changedTouches[0].screenX; handleGesture(); }, { passive: true });
+
+            function handleGesture() {
+                if (startX - endX > 35) nextSlide();
+                if (endX - startX > 35) prevSlide();
+            }
+        }
+
+        window.addEventListener('resize', () => { updateCarouselPositions(); });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Escape') closeDetailsModal();
+        });
+    </script>
+</body>
+</html>
