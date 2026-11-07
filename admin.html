@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AKK Paint - Secure Admin Dashboard with Storage</title>
+    <title>AKK Paint - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Pyidaungsu:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDKs (Compat Version: App, Firestore, Auth, Storage) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-
     <style>
         body { font-family: 'Pyidaungsu', 'Playfair Display', serif; background-color: #fafafa; }
         .smooth-transition { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Loading Spinner Animation */
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -24,7 +19,10 @@
             height: 36px;
             animation: spin 0.8s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen text-gray-900 pb-12 relative">
@@ -33,24 +31,27 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm hidden items-center justify-center z-50 smooth-transition">
         <div class="flex flex-col items-center space-y-3">
             <div class="spinner"></div>
-            <p id="loadingText" class="text-xs font-semibold text-gray-600 tracking-wider">ချိတ်ဆက်နေပါသည်...</p>
+            <p id="loadingText" class="text-xs font-semibold text-gray-600 tracking-wider">ခဏစောင့်ပါ...</p>
         </div>
     </div>
 
     <!-- 1. LOGIN SCREEN -->
     <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-xl border border-gray-100 space-y-6 text-center">
+            
             <div class="flex justify-center mb-2">
                 <img src="logo.png" alt="AKK Trading Logo" class="h-16 object-contain" onerror="this.onerror=null; this.outerHTML='<span class=\'text-2xl font-bold tracking-widest text-black\'>AKK TRADING</span>';">
             </div>
+
             <div>
                 <h2 class="text-xl font-bold text-gray-900">Admin ဝင်ရောက်ရန်</h2>
-                <p class="text-xs text-gray-400 mt-1">Firebase Authentication</p>
+                <p class="text-xs text-gray-400 mt-1">Firebase Admin Email ဖြည့်သွင်းပါ</p>
             </div>
-            <form onsubmit="handleFirebaseLogin(event)" class="space-y-4 text-left">
+
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Admin Email</label>
-                    <input type="email" id="loginEmail" required placeholder="admin@akkpaint.com" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
+                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@akkstore.com" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
@@ -65,11 +66,14 @@
 
     <!-- 2. MAIN ADMIN DASHBOARD -->
     <div id="adminDashboard" class="hidden">
+        
+        <!-- Header Section -->
         <header class="bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 md:px-12 py-4 flex justify-between items-center sticky top-0 z-40 smooth-transition">
             <div class="flex items-center space-x-3">
                 <img src="logo.png" alt="AKK Logo" class="h-10 object-contain" onerror="this.onerror=null; this.outerHTML='<span class=\'text-lg md:text-xl font-bold tracking-widest text-black\'>AKK TRADING</span>';">
             </div>
             
+            <!-- Hamburger Menu Button -->
             <div class="relative">
                 <button onclick="toggleMenu()" class="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full flex items-center justify-center smooth-transition shadow-sm active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,6 +81,7 @@
                     </svg>
                 </button>
 
+                <!-- Dropdown Menu Box -->
                 <div id="menuDropdown" class="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 hidden py-2 z-50 smooth-transition">
                     <button onclick="openAddModal(); toggleMenu();" class="w-full text-left px-4 py-3 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition flex items-center space-x-2">
                         <span>➕</span><span>ပစ္စည်းအသစ်ထည့်ရန်</span>
@@ -89,10 +94,13 @@
             </div>
         </header>
 
+        <!-- Main Content Container -->
         <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
+            
+            <!-- Title & Search Area -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-100 pb-6">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">ပစ္စည်းများ စီမံခန့်ခွဲမှု (Firebase Storage)</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">ပစ္စည်းများ စီမံခန့်ခွဲမှု (Auth + ImgBB + Firestore)</h1>
                     <p id="totalItems" class="text-xs text-gray-400 mt-1">စုစုပေါင်း: 0 ခု</p>
                 </div>
                 
@@ -102,8 +110,9 @@
                 </div>
             </div>
 
+            <!-- Unified Product Grid View -->
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Rendered via Firestore Live Data -->
+                <!-- Rendered via Firestore JS -->
             </div>
         </main>
     </div>
@@ -113,22 +122,27 @@
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto transform scale-95 smooth-transition" id="modalContainer">
             <h2 id="modalTitle" class="text-xl font-bold mb-6 text-gray-900 border-b border-gray-100 pb-3">ပစ္စည်းအသစ် ထည့်သွင်းရန်</h2>
             
-            <form id="productForm" onsubmit="saveProductToFirebase(event)" class="space-y-4">
+            <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4">
                 <input type="hidden" id="editDocId">
-                <input type="hidden" id="existingImageURL">
                 
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ပစ္စည်းကုဒ် / အမည်</label>
                     <input type="text" id="prodCode" required placeholder="ဥပမာ - LA 1000" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
                 </div>
+
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ဘရန်း (Brand)</label>
                     <input type="text" id="prodBrand" required placeholder="ဥပမာ - UPG / TOA" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
                 </div>
+
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ဓာတ်ပုံ (PNG / JPEG ဖိုင်ရွေးရန်)</label>
-                    <input type="file" id="prodImageFile" accept="image/png, image/jpeg" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800 smooth-transition">
+                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ဓာတ်ပုံဖိုင် (Image File)</label>
+                    <input type="file" id="prodImageFile" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800 smooth-transition">
+                    <p class="text-[10px] text-gray-400 mt-1">ပုံအသစ်မရွေးလျှင် မူလပုံအတိုင်း ဆက်ရှိနေပါမည်။</p>
                 </div>
+                <!-- Hidden old image url storage -->
+                <input type="hidden" id="existingImageUrl">
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ဈေးနှုန်း (Ks)</label>
@@ -139,6 +153,7 @@
                         <input type="number" id="prodStock" min="0" required placeholder="4" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
                     </div>
                 </div>
+
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ယူနစ် (Unit)</label>
                     <input type="text" id="prodUnit" required value="1 gallon" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-black smooth-transition">
@@ -152,9 +167,14 @@
         </div>
     </div>
 
-    <!-- Firebase Configuration and Logic Script -->
+    <!-- Firebase SDKs (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- JavaScript Logic -->
     <script>
-        // TODO: Replace with your actual Firebase project credentials
+        // ======= FIREBASE CONFIGURATION =======
         const firebaseConfig = {
   apiKey: "AIzaSyAW5BNlFf0SBhC1vP8PfMOjItPRtzjLKdU",
   authDomain: "akk-store-9.firebaseapp.com",
@@ -166,10 +186,21 @@
 };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const auth = firebase.auth();
-        const storage = firebase.storage();
+        const db = firebase.firestore();
+
+        // ======= SESSION PERSISTENCE =======
+        // Browser ပိတ်လိုက်သည်နှင့် Auto Logout ဖြစ်စေမည့် Setting
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+            .catch((error) => {
+                console.error("Persistence Setting Error: ", error);
+            });
+
+        // ======= IMGBB API CONFIGURATION =======
+        const IMGBB_API_KEY = "9059401b511b914bb2537143e4c8d3f9";
 
         let productsList = [];
 
@@ -186,7 +217,8 @@
         }
 
         function toggleMenu() {
-            document.getElementById('menuDropdown').classList.toggle('hidden');
+            const menu = document.getElementById('menuDropdown');
+            menu.classList.toggle('hidden');
         }
 
         window.onclick = function(event) {
@@ -195,42 +227,46 @@
             }
         }
 
-        // Firebase Auth Login
-        function handleFirebaseLogin(e) {
+        // ======= FIREBASE AUTHENTICATION LOGIN =======
+        function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
+            const emailInput = document.getElementById('loginEmail').value.trim();
+            const passInput = document.getElementById('loginPass').value.trim();
 
-            showLoading("စစ်ဆေးနေပါသည်...", 600, () => {
-                auth.signInWithEmailAndPassword(email, pass)
+            showLoading("စစ်ဆေးနေသည်...", 600, () => {
+                auth.signInWithEmailAndPassword(emailInput, passInput)
                     .then((userCredential) => {
-                        console.log("Logged in as:", userCredential.user.email);
+                        // Login အောင်မြင်ပါက
+                        checkAuth();
                     })
                     .catch((error) => {
-                        alert("အကောင့်ဝင်ရောက်မှု မအောင်မြင်ပါ: " + error.message);
+                        console.error(error);
+                        alert("Email သို့မဟုတ် Password မှားယွင်းနေပါသည်။");
                     });
             });
         }
 
-        // Firebase Auth Logout
+        // ======= FIREBASE AUTHENTICATION LOGOUT =======
         function handleLogout() {
-            showLoading("ထွက်ခွာနေပါသည်...", 400, () => {
-                auth.signOut().catch((error) => {
-                    console.error("Logout error", error);
+            showLoading("ထွက်ခွာနေသည်...", 400, () => {
+                auth.signOut().then(() => {
+                    checkAuth();
                 });
             });
         }
 
-        // Auth State Observer
+        // ======= AUTH STATE OBSERVER =======
         auth.onAuthStateChanged((user) => {
             const loginSection = document.getElementById('loginSection');
             const adminDashboard = document.getElementById('adminDashboard');
 
             if (user) {
+                // User ဝင်ထားပြီးဖြစ်ပါက Dashboard ပြမည်
                 loginSection.classList.add('hidden');
                 adminDashboard.classList.remove('hidden');
-                fetchProductsFromFirebase();
+                fetchProductsFromFirestore();
             } else {
+                // မဝင်ရသေးပါက သို့မဟုတ် Browser ပြန်ဖွင့်ချိန်တွင် Login Form ပြမည်
                 loginSection.classList.remove('hidden');
                 adminDashboard.classList.add('hidden');
                 document.getElementById('loginEmail').value = '';
@@ -238,46 +274,50 @@
             }
         });
 
-        // Fetch products real-time from Firestore
-        function fetchProductsFromFirebase() {
-            db.collection("products").onSnapshot((snapshot) => {
+        function checkAuth() {
+            // onAuthStateChanged မှ အလိုအလျောက် စောင့်ကြည့်ပေးပါမည်။
+        }
+
+        // ======= FIRESTORE REALTIME SYNC =======
+        function fetchProductsFromFirestore() {
+            db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
                 productsList = [];
                 snapshot.forEach((doc) => {
                     productsList.push({ id: doc.id, ...doc.data() });
                 });
                 renderProducts(productsList);
             }, (error) => {
-                console.error("Error fetching Firestore data: ", error);
+                console.error("Error fetching products: ", error);
             });
         }
 
-        function renderProducts(list) {
+        function renderProducts(filteredList) {
             const productGrid = document.getElementById('productGrid');
             const totalItemsBadge = document.getElementById('totalItems');
 
             productGrid.innerHTML = '';
-            totalItemsBadge.innerText = `စုစုပေါင်း: ${list.length} ခု`;
+            totalItemsBadge.innerText = `စုစုပေါင်း: ${filteredList.length} ခု`;
 
-            if (list.length === 0) {
+            if (filteredList.length === 0) {
                 productGrid.innerHTML = `<p class="text-center text-gray-400 py-12 col-span-full">ပစ္စည်းများ မရှိသေးပါ။</p>`;
                 return;
             }
 
-            list.forEach((product) => {
+            filteredList.forEach((product) => {
                 productGrid.innerHTML += `
                     <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md smooth-transition">
                         <div>
                             <div class="w-full h-40 bg-gray-50 rounded-2xl overflow-hidden mb-4 border border-gray-100">
-                                <img src="${product.image}" alt="${product.code}" class="w-full h-full object-cover">
+                                <img src="${product.image || 'https://via.placeholder.com/300'}" alt="${product.code}" class="w-full h-full object-cover">
                             </div>
                             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">${product.brand}</span>
                             <h3 class="font-bold text-base text-gray-900 mt-2">${product.code}</h3>
                             <p class="text-xs text-gray-500 mt-0.5">လက်ကျန်: ${product.stock} ${product.unit}</p>
-                            <p class="text-base font-bold text-black mt-2">${product.price.toLocaleString()} Ks</p>
+                            <p class="text-base font-bold text-black mt-2">${Number(product.price).toLocaleString()} Ks</p>
                         </div>
                         <div class="flex space-x-2 pt-4 mt-4 border-t border-gray-50">
                             <button onclick="openEditModal('${product.id}')" class="flex-1 bg-gray-100 text-gray-800 hover:bg-black hover:text-white py-2 rounded-xl text-xs font-semibold smooth-transition text-center">ပြင်ရန်</button>
-                            <button onclick="deleteProductFromFirebase('${product.id}')" class="flex-1 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white py-2 rounded-xl text-xs font-semibold smooth-transition text-center">ဖျက်ရန်</button>
+                            <button onclick="deleteProduct('${product.id}')" class="flex-1 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white py-2 rounded-xl text-xs font-semibold smooth-transition text-center">ဖျက်ရန်</button>
                         </div>
                     </div>
                 `;
@@ -296,7 +336,7 @@
         function openAddModal() {
             document.getElementById('modalTitle').innerText = "ပစ္စည်းအသစ် ထည့်သွင်းရန်";
             document.getElementById('editDocId').value = "";
-            document.getElementById('existingImageURL').value = "";
+            document.getElementById('existingImageUrl').value = "";
             document.getElementById('productForm').reset();
             showModalSmooth('productModal', 'modalContainer');
         }
@@ -306,15 +346,14 @@
             if (!product) return;
 
             document.getElementById('modalTitle').innerText = "ပစ္စည်းအချက်အလက် ပြင်ဆင်ရန်";
-            document.getElementById('editDocId').value = docId;
-            document.getElementById('existingImageURL').value = product.image;
+            document.getElementById('editDocId').value = product.id;
             document.getElementById('prodCode').value = product.code;
             document.getElementById('prodBrand').value = product.brand;
+            document.getElementById('existingImageUrl').value = product.image || '';
             document.getElementById('prodPrice').value = product.price;
             document.getElementById('prodUnit').value = product.unit;
             document.getElementById('prodStock').value = product.stock;
-            document.getElementById('prodImageFile').value = ""; // Reset file input
-            
+            document.getElementById('prodImageFile').value = "";
             showModalSmooth('productModal', 'modalContainer');
         }
 
@@ -342,62 +381,78 @@
             }, 300);
         }
 
-        // Save or Update Product to Firestore with Firebase Storage Upload
-        function saveProductToFirebase(event) {
+        // ======= IMGBB UPLOAD FUNCTION =======
+        async function uploadImageToImgBB(imageFile) {
+            const formData = new FormData();
+            formData.append("image", imageFile);
+
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=9059401b511b914bb2537143e4c8d3f9`, {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                return data.data.url;
+            } else {
+                throw new Error("ImgBB ပုံတင်ရာတွင် အမှားအယွင်းရှိသည်။");
+            }
+        }
+
+        // ======= SAVE PRODUCT (FIRESTORE + IMGBB) =======
+        async function saveProduct(event) {
             event.preventDefault();
             const docId = document.getElementById('editDocId').value;
-            const fileInput = document.getElementById('prodImageFile');
-            const existingImage = document.getElementById('existingImageURL').value;
+            const code = document.getElementById('prodCode').value.trim();
+            const brand = document.getElementById('prodBrand').value.trim();
+            const price = Number(document.getElementById('prodPrice').value);
+            const stock = Number(document.getElementById('prodStock').value);
+            const unit = document.getElementById('prodUnit').value.trim();
+            const imageFile = document.getElementById('prodImageFile').files[0];
+            let imageUrl = document.getElementById('existingImageUrl').value;
 
             closeModal();
-            showLoading("ပုံနှင့် ဒေတာများကို သိမ်းဆည်းနေပါသည်...", 1000, () => {
-                // အကယ်၍ ပုံအသစ် ရွေးထားပါက Firebase Storage သို့ တင်မည်
-                if (fileInput.files && fileInput.files[0]) {
-                    const file = fileInput.files[0];
-                    const storageRef = storage.ref(`products/${Date.now()}_${file.name}`);
-                    
-                    storageRef.put(file).then((snapshot) => {
-                        return snapshot.ref.getDownloadURL();
-                    }).then((downloadURL) => {
-                        saveDataToFirestore(docId, downloadURL);
-                    }).catch((error) => {
-                        alert("ပုံတင်ရာတွင် အမှားအယွင်းရှိသည်: " + error.message);
-                    });
-                } else {
-                    // ပုံမပြောင်းရသေးပါက မူလ Image URL အတိုင်း ဆက်သုံးမည်
-                    saveDataToFirestore(docId, existingImage);
+            showLoading("ပုံတင်ပြီး ဒေတာသိမ်းဆည်းနေပါသည်...", 1000, async () => {
+                try {
+                    if (imageFile) {
+                        imageUrl = await uploadImageToImgBB(imageFile);
+                    }
+
+                    const productData = {
+                        code: code,
+                        brand: brand,
+                        image: imageUrl,
+                        price: price,
+                        stock: stock,
+                        unit: unit,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    if (docId === "") {
+                        await db.collection("products").add(productData);
+                    } else {
+                        await db.collection("products").doc(docId).update(productData);
+                    }
+
+                    document.getElementById('searchInput').value = "";
+                    alert("အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
+                } catch (error) {
+                    console.error("Error saving product: ", error);
+                    alert("အမှားအယွင်း ဖြစ်ပေါ်သွားပါသည်။ ထပ်မံကြိုးစားပါ။");
                 }
             });
         }
 
-        function saveDataToFirestore(docId, imageUrl) {
-            const productData = {
-                code: document.getElementById('prodCode').value.trim(),
-                brand: document.getElementById('prodBrand').value.trim(),
-                image: imageUrl,
-                price: Number(document.getElementById('prodPrice').value),
-                unit: document.getElementById('prodUnit').value.trim(),
-                stock: Number(document.getElementById('prodStock').value),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if (!docId) {
-                db.collection("products").add(productData)
-                  .catch(err => alert("အမှားအယွင်းရှိသည်: " + err.message));
-            } else {
-                db.collection("products").doc(docId).update(productData)
-                  .catch(err => alert("အမှားအယွင်းရှိသည်: " + err.message));
-            }
-            document.getElementById('searchInput').value = "";
-        }
-
-        // Delete Product from Firestore
-        function deleteProductFromFirebase(docId) {
-            if (confirm("ဤပစ္စည်းစာရင်းကို Firebase မှ ဖျက်ရန် သေချာပါသလား?")) {
-                showLoading("ဖျက်ဆီးနေပါသည်...", 500, () => {
-                    db.collection("products").doc(docId).delete()
-                      .catch(err => alert("ဖျက်ရာတွင် အမှားအယွင်းရှိသည်: " + err.message));
-                    document.getElementById('searchInput').value = "";
+        // ======= DELETE PRODUCT =======
+        function deleteProduct(docId) {
+            if (confirm("ဤပစ္စည်းစာရင်းကို ဖျက်ရန် သေချာပါသလား?")) {
+                showLoading("ဖျက်နေသည်...", 500, async () => {
+                    try {
+                        await db.collection("products").doc(docId).delete();
+                    } catch (error) {
+                        console.error("Error deleting product: ", error);
+                        alert("ဖျက်ဆီးရာတွင် အမှားအယွင်း ရှိနေပါသည်။");
+                    }
                 });
             }
         }
