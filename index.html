@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AKK Paint - Product Showcase</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,12 +28,13 @@
     </script>
 
     <style>
+        /* Strict Mobile Fit without Scrollbar */
         html, body {
             height: 100%;
+            height: 100dvh; /* Dynamic Viewport Height for Mobile Browsers */
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden; /* Scroll မဖြစ်စေရန် */
         }
 
         body {
@@ -68,8 +69,8 @@
             border: 3.5px solid rgba(0, 0, 0, 0.08);
             border-radius: 50%;
             border-top-color: #000;
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
@@ -82,6 +83,8 @@
             align-items: center;
             justify-content: center;
             perspective: 1000px;
+            width: 100%;
+            height: 100%;
         }
 
         .carousel-item {
@@ -119,7 +122,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen selection:bg-slate-300 relative opacity-0 animate-fade-in">
+<body class="h-full selection:bg-slate-300 relative opacity-0 animate-fade-in">
 
     <!-- GLOBAL LOADING OVERLAY -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-500">
@@ -128,13 +131,12 @@
 
     <!-- TOP HEADER / NAVBAR -->
     <header class="w-full px-4 py-3 sm:px-6 md:px-12 flex items-center justify-between z-30 animate-fade-in delay-100 flex-shrink-0">
-        <!-- Desktop နဲ့ Mobile View နှစ်ခုစလုံးအတွက် Logo Size ကို ညီညာကြီးမားစွာ ထားရှိသည် -->
         <div class="flex items-center gap-3 cursor-pointer group" onclick="resetCatalog()">
             <img 
                 src="logo.png" 
                 alt="AKK Trading Logo" 
-                class="h-10 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                onerror="this.onerror=null; this.outerHTML='<span class=\'text-lg sm:text-xl font-bold tracking-widest text-black font-brand\'>AKK TRADING</span>';"
+                class="h-9 sm:h-11 md:h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                onerror="this.onerror=null; this.outerHTML='<span class=\'text-base sm:text-xl font-bold tracking-widest text-black font-brand\'>AKK</span>';"
             >
         </div>
 
@@ -145,27 +147,27 @@
                     id="searchInput"
                     oninput="handleSearch(this.value)"
                     placeholder="Search..." 
-                    class="w-32 sm:w-44 md:w-56 px-3.5 py-1.5 text-xs sm:text-sm bg-transparent border border-gray-400 rounded-full focus:outline-none focus:border-black transition-all duration-300 placeholder-gray-500 text-gray-800"
+                    class="w-28 sm:w-44 md:w-56 px-3 py-1.5 text-xs sm:text-sm bg-transparent border border-gray-400 rounded-full focus:outline-none focus:border-black transition-all duration-300 placeholder-gray-500 text-gray-800"
                 >
                 <i class="fa-solid fa-magnifying-glass absolute right-3 text-gray-500 text-xs pointer-events-none"></i>
 
-                <div id="searchResults" class="hidden absolute top-full right-0 sm:right-0 mt-2 z-50 bg-white/95 backdrop-blur-md border border-gray-200/80 rounded-2xl p-2 shadow-xl w-64 sm:w-72 md:w-80 max-h-64 overflow-y-auto">
+                <div id="searchResults" class="hidden absolute top-full right-0 sm:right-0 mt-2 z-50 bg-white/95 backdrop-blur-md border border-gray-200/80 rounded-2xl p-2 shadow-xl w-60 sm:w-72 md:w-80 max-h-60 overflow-y-auto">
                     <!-- Search results -->
                 </div>
             </div>
 
             <a 
-                href="tel:09123456789" 
-                class="px-3.5 sm:px-6 py-1.5 text-xs sm:text-sm border border-gray-400 rounded-full hover:bg-black hover:text-white transition-all duration-300 font-medium active:scale-95 inline-flex items-center justify-center text-gray-900"
+                href="tel:09890199093" 
+                class="px-3 sm:px-6 py-1.5 text-xs sm:text-sm border border-gray-400 rounded-full hover:bg-black hover:text-white transition-all duration-300 font-medium active:scale-95 inline-flex items-center justify-center text-gray-900"
             >
                 Contact
             </a>
         </div>
     </header>
 
-    <!-- MAIN CAROUSEL SHOWCASE AREA -->
-    <main class="flex-1 flex flex-col justify-center items-center relative px-2 sm:px-4 overflow-hidden w-full my-auto animate-fade-in delay-200">
-        <div class="w-full max-w-6xl mx-auto flex items-center justify-center relative h-[340px] sm:h-[420px] md:h-[520px]">
+    <!-- MAIN CAROUSEL SHOWCASE AREA (Dynamic Screen Height Fit) -->
+    <main class="flex-1 min-h-0 flex flex-col justify-center items-center relative px-2 sm:px-4 overflow-hidden w-full animate-fade-in delay-200">
+        <div class="w-full max-w-6xl mx-auto flex items-center justify-center relative h-full max-h-[62vh] sm:max-h-[70vh]">
             <div id="carouselTrack" class="carousel-track relative w-full h-full flex items-center justify-center">
                 <!-- Dynamically Rendered from Firestore -->
             </div>
@@ -182,7 +184,7 @@
         </div>
     </main>
 
-    <!-- FOOTER SECTION -->
+    <!-- FOOTER SECTION (Clean Responsive Layout) -->
     <footer class="w-full px-4 sm:px-6 py-3 md:px-16 grid grid-cols-1 md:grid-cols-3 items-center z-30 gap-2 md:gap-0 flex-shrink-0">
         
         <div id="desktopDetailsContainer" class="text-transition opacity-0 hidden md:block space-y-1 text-sm font-sans text-gray-800 leading-relaxed">
@@ -196,20 +198,20 @@
             <button 
                 onclick="prevSlide()" 
                 aria-label="Previous Product"
-                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm bg-white/60 backdrop-blur-sm z-10"
+                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm backdrop-blur-sm z-10"
             >
                 <i class="fa-solid fa-chevron-left text-xs"></i>
             </button>
 
-            <div id="titleContainer" class="text-transition opacity-0 text-center mx-auto">
-                <h1 id="productTitleCode" class="serif-title text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-wide text-gray-900 select-none">
+            <div id="titleContainer" class="text-transition opacity-0 text-center mx-auto px-2">
+                <h1 id="productTitleCode" class="serif-title text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-wide text-gray-900 select-none truncate max-w-[200px] sm:max-w-none">
                 </h1>
             </div>
 
             <button 
                 onclick="nextSlide()" 
                 aria-label="Next Product"
-                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm bg-white/60 backdrop-blur-sm z-10"
+                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm backdrop-blur-sm z-10"
             >
                 <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
@@ -339,6 +341,7 @@
             setupTouchEvents();
         });
 
+        // Mobile device height တိကျစွာ ရရှိစေရန် Card Max Heights များ ပြင်ဆင်ထားသည်
         function initDOMCardsStacked() {
             const track = document.getElementById('carouselTrack');
             track.innerHTML = products.map((product, idx) => {
@@ -349,7 +352,7 @@
                     id="card-item-${idx}"
                     onclick="handleItemClick(${idx})"
                     style="transform: translateX(0px) scale(0.5); opacity: 0;"
-                    class="carousel-item cursor-pointer select-none flex flex-col items-center justify-center w-64 h-[300px] sm:w-[350px] sm:h-[380px] md:w-[460px] md:h-[460px]"
+                    class="carousel-item cursor-pointer select-none flex flex-col items-center justify-center w-[75vw] max-w-[280px] h-[55vh] sm:w-[350px] sm:h-[380px] md:w-[460px] md:h-[460px]"
                 >
                     ${product.image ? `
                         <div class="w-full h-full bg-transparent flex flex-col items-center justify-center relative overflow-hidden">
@@ -371,7 +374,7 @@
             const isOutOfStock = product.stocks <= 0;
             return `
             <div class="w-full h-full bg-transparent flex flex-col items-center justify-center text-center relative">
-                <i class="fa-solid fa-image text-6xl text-gray-300 mb-2"></i>
+                <i class="fa-solid fa-image text-5xl text-gray-300 mb-2"></i>
                 <span class="font-bold text-sm text-gray-700">${product.code}</span>
                 ${isOutOfStock ? '<span class="absolute bg-red-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl animate-pulse">Out of Stock</span>' : ''}
             </div>
@@ -380,7 +383,7 @@
 
         function updateCarouselPositions() {
             const isMobile = window.innerWidth < 640;
-            const spacing = isMobile ? 150 : 340; 
+            const spacing = isMobile ? (window.innerWidth * 0.42) : 340; 
             
             products.forEach((_, idx) => {
                 const card = document.getElementById(`card-item-${idx}`);
@@ -404,12 +407,12 @@
                     opacity = 1;
                     rotateY = 0;
                 } else if (Math.abs(offset) === 1) {
-                    scale = isMobile ? 0.6 : 0.7;
-                    blur = 4;
+                    scale = isMobile ? 0.65 : 0.7;
+                    blur = 3;
                     opacity = 0.7;
                 } else {
                     scale = 0.4;
-                    blur = 10;
+                    blur = 8;
                     opacity = 0;
                 }
 
