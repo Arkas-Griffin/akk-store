@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AKK Paint - Product Showcase</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,11 +28,21 @@
     </script>
 
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at center, #f4f5f7 0%, #e1e4e8 100%);
             color: #1a1a1a;
-            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .serif-title {
@@ -109,7 +119,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-slate-300 relative opacity-0 animate-fade-in">
+<body class="min-h-screen selection:bg-slate-300 relative opacity-0 animate-fade-in">
 
     <!-- GLOBAL LOADING OVERLAY -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-500">
@@ -117,14 +127,14 @@
     </div>
 
     <!-- TOP HEADER / NAVBAR -->
-    <header class="w-full px-4 py-5 sm:px-6 md:px-12 flex items-center justify-between z-30 animate-fade-in delay-100">
-        <!-- Logo: SVG အစား logo.png ဖိုင်ကို သုံးထားပါသည် -->
+    <header class="w-full px-4 py-3 sm:px-6 md:px-12 flex items-center justify-between z-30 animate-fade-in delay-100 flex-shrink-0">
+        <!-- Desktop နဲ့ Mobile View နှစ်ခုစလုံးအတွက် Logo Size ကို ညီညာကြီးမားစွာ ထားရှိသည် -->
         <div class="flex items-center gap-3 cursor-pointer group" onclick="resetCatalog()">
             <img 
                 src="logo.png" 
                 alt="AKK Trading Logo" 
-                class="h-10 sm:h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                onerror="this.onerror=null; this.outerHTML='<span class=\'text-lg sm:text-xl font-bold tracking-widest text-black font-brand\'>AKK</span>';"
+                class="h-10 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                onerror="this.onerror=null; this.outerHTML='<span class=\'text-lg sm:text-xl font-bold tracking-widest text-black font-brand\'>AKK TRADING</span>';"
             >
         </div>
 
@@ -145,7 +155,7 @@
             </div>
 
             <a 
-                href="tel:09890199093" 
+                href="tel:09123456789" 
                 class="px-3.5 sm:px-6 py-1.5 text-xs sm:text-sm border border-gray-400 rounded-full hover:bg-black hover:text-white transition-all duration-300 font-medium active:scale-95 inline-flex items-center justify-center text-gray-900"
             >
                 Contact
@@ -154,26 +164,26 @@
     </header>
 
     <!-- MAIN CAROUSEL SHOWCASE AREA -->
-    <main class="flex-1 flex flex-col justify-center items-center relative my-1 md:my-0 px-2 sm:px-4 overflow-hidden w-full animate-fade-in delay-200">
-        <div class="w-full max-w-6xl mx-auto flex items-center justify-center relative min-h-[440px] sm:min-h-[520px] md:min-h-[600px]">
+    <main class="flex-1 flex flex-col justify-center items-center relative px-2 sm:px-4 overflow-hidden w-full my-auto animate-fade-in delay-200">
+        <div class="w-full max-w-6xl mx-auto flex items-center justify-center relative h-[340px] sm:h-[420px] md:h-[520px]">
             <div id="carouselTrack" class="carousel-track relative w-full h-full flex items-center justify-center">
                 <!-- Dynamically Rendered from Firestore -->
             </div>
         </div>
 
-        <div class="md:hidden mt-2 z-20">
+        <div class="md:hidden mt-1 z-20 flex-shrink-0">
             <button 
                 onclick="openDetailsModal()" 
-                class="px-5 py-2 bg-gray-200/80 backdrop-blur border border-gray-300 rounded-full text-xs font-serif text-gray-800 shadow-sm active:scale-95 transition-all flex items-center gap-2"
+                class="px-4 py-1.5 bg-gray-200/80 backdrop-blur border border-gray-300 rounded-full text-[11px] font-serif text-gray-800 shadow-sm active:scale-95 transition-all flex items-center gap-2"
             >
                 <span>Tap to view details</span>
-                <i class="fa-solid fa-chevron-right text-[9px] text-gray-500"></i>
+                <i class="fa-solid fa-chevron-right text-[8px] text-gray-500"></i>
             </button>
         </div>
     </main>
 
     <!-- FOOTER SECTION -->
-    <footer class="w-full px-4 sm:px-6 py-5 md:px-16 grid grid-cols-1 md:grid-cols-3 items-center z-30 gap-4 md:gap-0">
+    <footer class="w-full px-4 sm:px-6 py-3 md:px-16 grid grid-cols-1 md:grid-cols-3 items-center z-30 gap-2 md:gap-0 flex-shrink-0">
         
         <div id="desktopDetailsContainer" class="text-transition opacity-0 hidden md:block space-y-1 text-sm font-sans text-gray-800 leading-relaxed">
             <p><span class="font-medium">Brand :</span> <span id="d-brand" class="font-serif"></span></p>
@@ -186,22 +196,22 @@
             <button 
                 onclick="prevSlide()" 
                 aria-label="Previous Product"
-                class="md:hidden w-11 h-11 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm backdrop-blur-sm z-10"
+                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm bg-white/60 backdrop-blur-sm z-10"
             >
-                <i class="fa-solid fa-chevron-left text-sm"></i>
+                <i class="fa-solid fa-chevron-left text-xs"></i>
             </button>
 
             <div id="titleContainer" class="text-transition opacity-0 text-center mx-auto">
-                <h1 id="productTitleCode" class="serif-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-wide text-gray-900 select-none">
+                <h1 id="productTitleCode" class="serif-title text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-wide text-gray-900 select-none">
                 </h1>
             </div>
 
             <button 
                 onclick="nextSlide()" 
                 aria-label="Next Product"
-                class="md:hidden w-11 h-11 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm backdrop-blur-sm z-10"
+                class="md:hidden w-10 h-10 rounded-full border border-gray-800 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90 shadow-sm bg-white/60 backdrop-blur-sm z-10"
             >
-                <i class="fa-solid fa-chevron-right text-sm"></i>
+                <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
         </div>
 
@@ -338,8 +348,8 @@
                 <div 
                     id="card-item-${idx}"
                     onclick="handleItemClick(${idx})"
-                    style="transform: translateX(0px) scale(0.6); opacity: 0;"
-                    class="carousel-item cursor-pointer select-none flex flex-col items-center justify-center w-80 h-[420px] sm:w-[420px] sm:h-[480px] md:w-[520px] md:h-[540px]"
+                    style="transform: translateX(0px) scale(0.5); opacity: 0;"
+                    class="carousel-item cursor-pointer select-none flex flex-col items-center justify-center w-64 h-[300px] sm:w-[350px] sm:h-[380px] md:w-[460px] md:h-[460px]"
                 >
                     ${product.image ? `
                         <div class="w-full h-full bg-transparent flex flex-col items-center justify-center relative overflow-hidden">
@@ -347,7 +357,7 @@
                             
                             ${isOutOfStock ? `
                                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <span class="bg-red-600 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-full uppercase tracking-wider shadow-2xl animate-pulse">Out of Stock</span>
+                                    <span class="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl animate-pulse">Out of Stock</span>
                                 </div>
                             ` : ''}
                         </div>
@@ -361,16 +371,16 @@
             const isOutOfStock = product.stocks <= 0;
             return `
             <div class="w-full h-full bg-transparent flex flex-col items-center justify-center text-center relative">
-                <i class="fa-solid fa-image text-7xl text-gray-300 mb-2"></i>
-                <span class="font-bold text-base text-gray-700">${product.code}</span>
-                ${isOutOfStock ? '<span class="absolute bg-red-600 text-white text-xs font-bold px-5 py-2 rounded-full uppercase tracking-wider shadow-2xl animate-pulse">Out of Stock</span>' : ''}
+                <i class="fa-solid fa-image text-6xl text-gray-300 mb-2"></i>
+                <span class="font-bold text-sm text-gray-700">${product.code}</span>
+                ${isOutOfStock ? '<span class="absolute bg-red-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl animate-pulse">Out of Stock</span>' : ''}
             </div>
             `;
         }
 
         function updateCarouselPositions() {
             const isMobile = window.innerWidth < 640;
-            const spacing = isMobile ? 200 : 400; 
+            const spacing = isMobile ? 150 : 340; 
             
             products.forEach((_, idx) => {
                 const card = document.getElementById(`card-item-${idx}`);
@@ -394,11 +404,11 @@
                     opacity = 1;
                     rotateY = 0;
                 } else if (Math.abs(offset) === 1) {
-                    scale = isMobile ? 0.65 : 0.75;
+                    scale = isMobile ? 0.6 : 0.7;
                     blur = 4;
                     opacity = 0.7;
                 } else {
-                    scale = 0.45;
+                    scale = 0.4;
                     blur = 10;
                     opacity = 0;
                 }
